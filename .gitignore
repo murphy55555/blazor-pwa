@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/RaceCarInspection/Client/bin/Debug/net7.0
+/RaceCarInspection/Client/obj
+/RaceCarInspection/Server/bin/Debug/net7.0
+/RaceCarInspection/Server/obj
+/RaceCarInspection/Shared/bin/Debug/net7.0
+/RaceCarInspection/Shared/obj
