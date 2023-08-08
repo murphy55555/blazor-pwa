@@ -1,0 +1,19 @@
+﻿<h3>Login</h3>
+@page "/login"
+@inject NavigationManager navigationManager;
+
+<button class="btn btn-primary" @onclick="LogIn">Log In</button>
+
+@code {
+    [CascadingParameter]
+    public EventCallback<bool> LogInEvent { get; set; }
+
+    private bool isLoggedIn = false;
+
+    private void LogIn()
+    {
+        isLoggedIn = !isLoggedIn;
+        LogInEvent.InvokeAsync(isLoggedIn);
+        navigationManager.NavigateTo("/my-inspections");
+    }
+}

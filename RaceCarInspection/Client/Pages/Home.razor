@@ -1,0 +1,88 @@
+﻿@page "/"
+@inject NavigationManager navigationManager;
+
+<PageTitle>Race Car Inspection</PageTitle>
+
+<h1></h1>
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-lg-10">
+            <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="3" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="4" aria-label="Slide 4"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="5" aria-label="Slide 5"></button>
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="6" aria-label="Slide 6"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="evo.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="miata.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="gtr.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="sti.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="mustang.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="corvette.jpg" class="d-block w-100" alt="...">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="card col-12 col-lg-10 mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Race Car Inspection</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Welcome Inspectors!</h6>
+                <p class="card-text">This is your one stop shop to inspecting race cars.</p>
+                @if (IsLoggedIn)
+                {
+                    <div class="px-4">
+                        <span >Welcome Inspector Gadget! <NavLink href="/" @onclick="LogOut" class="nav-item">Sign Out</NavLink></span>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="my-inspections">
+                            <span class="oi oi-magnifying-glass" aria-hidden="true"></span>My Inspections
+                        </NavLink>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-primary" @onclick='() => navigationManager.NavigateTo("/login")'>Log In</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public bool IsLoggedIn { get; set; }
+
+    [CascadingParameter]
+    public EventCallback<bool> LogInEvent { get; set; }
+
+    private void LogOut()
+    {
+        LogInEvent.InvokeAsync(false);
+    }
+}

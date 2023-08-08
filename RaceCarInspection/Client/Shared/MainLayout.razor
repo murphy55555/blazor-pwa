@@ -2,16 +2,42 @@
 
 <div class="page">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu IsLoggedIn=IsLoggedIn />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
+        @if (IsLoggedIn)
+        {
+            <div class="top-row px-4">
+                <span>Welcome Inspector Gadget!<NavLink href="/" @onclick="SignOut" class="nav-item">Sign Out</NavLink></span>
+            </div>
+        }
         <article class="content px-4">
-            @Body
+            <CascadingValue Value=OnLoginChange>
+                <CascadingValue Value=IsLoggedIn>
+                    @Body
+                </CascadingValue>
+            </CascadingValue>
         </article>
     </main>
 </div>
+
+@code {
+    private EventCallback<bool> onLoginChange = EventCallback<bool>.Empty;
+    private bool IsLoggedIn = false;
+
+    EventCallback<bool> OnLoginChange
+    {
+        get
+        {
+            if (onLoginChange.Equals(EventCallback<bool>.Empty))
+                onLoginChange = EventCallback.Factory.Create<bool>(this, (isLoggedIn) => IsLoggedIn = isLoggedIn);
+            return onLoginChange;
+        }
+    }
+
+    private void SignOut()
+    {
+        IsLoggedIn = false;
+    }
+}
