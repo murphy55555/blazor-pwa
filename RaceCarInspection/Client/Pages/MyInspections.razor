@@ -1,5 +1,35 @@
-﻿<h3>Inspections</h3>
-@page "/my-inspections"
-@code {
+﻿@page "/my-inspections"
+@using RaceCarInspection.Client.Services;
+@inject IInspectionService inspectionService
+@inject NavigationManager navigationManager;
 
+<div class="mb-4">
+    <span class="h3">Assigned Inspections</span>
+    <span class="oi oi-bell float-end text-primary" aria-hidden="true"></span>
+</div>
+
+<div class="list-group">
+    @foreach (var inspection in inspections)
+    {
+        <span class="list-group-item list-group-item-secondary" role="button" @onclick='() => navigationManager.NavigateTo($"/inspection/{inspection.CarNumber}")'>
+            <div class="p-2">
+                <span>@GetCarDescription(inspection)</span>
+                <span class="oi oi-caret-right float-end" aria-hidden="true"></span>
+            </div>
+
+        </span>
+    }
+</div>
+
+@code {
+    private List<RaceCarInspection.Client.Models.Inspection> inspections = new List<RaceCarInspection.Client.Models.Inspection>();
+    protected override async Task OnInitializedAsync()
+    {
+        inspections = await inspectionService.GetInspections();
+    }
+
+    private string GetCarDescription(RaceCarInspection.Client.Models.Inspection inspection)
+    {
+        return $"Car #{inspection.CarNumber} - {inspection.Color} {inspection.Make} {inspection.Model}";
+    }
 }

@@ -1,19 +1,42 @@
-﻿<h3>Login</h3>
-@page "/login"
+﻿@page "/login"
 @inject NavigationManager navigationManager;
-
-<button class="btn btn-primary" @onclick="LogIn">Log In</button>
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+        <div class="form-floating mb-2">
+            <input @bind="loginEmail" type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+            <label for="floatingInput">Email address</label>
+        </div>
+        <div class="form-floating mb-2">
+            <input @bind="loginPassword" type="password" class="form-control" id="floatingPassword" placeholder="Password">
+            <label for="floatingPassword">Password</label>
+        </div>
+        <span class="text-danger mb-3">@message</span>
+        <button class="btn btn-primary w-100 py-2" type="submit" @onclick="LogIn">Sign in</button>
+    </div>
+</div>
 
 @code {
     [CascadingParameter]
     public EventCallback<bool> LogInEvent { get; set; }
 
     private bool isLoggedIn = false;
+    private string loginEmail;
+    private string loginPassword;
+    private string message;
 
     private void LogIn()
     {
-        isLoggedIn = !isLoggedIn;
-        LogInEvent.InvokeAsync(isLoggedIn);
-        navigationManager.NavigateTo("/my-inspections");
+        if (loginEmail == "buckeye@osu.edu" && loginPassword == "brutus")
+        {
+            isLoggedIn = !isLoggedIn;
+            LogInEvent.InvokeAsync(isLoggedIn);
+            navigationManager.NavigateTo("/my-inspections");
+        }
+        else
+        {
+            loginPassword = "";
+            message = "Invalid username or password";
+        }
     }
 }
