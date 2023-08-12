@@ -1,0 +1,75 @@
+﻿@page "/push-notifications"
+@using RaceCarInspection.Shared.Models;
+@inject IJSRuntime JS
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject HttpClient Http
+
+<div class="row">
+    <div class="col-sm-12 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Push Notification Setup</h5>
+                <p class="card-text">Give your device a unique name for registration</p>
+                <input @bind="deviceName" class="form-control" id="floatingInput" placeholder="Device Name">
+                <button class="btn btn-primary mt-2" @onclick="RegisterForPushNotifications" disabled="@String.IsNullOrEmpty(deviceName)">Register for Push Notifications</button>
+                <div class="mt-2">
+                    <span class="text-danger">@errorDuringRegistrationMessage</span>
+                </div>
+                <div class="mt-2">
+                    <span class="text-success">@registrationInfo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string deviceName = string.Empty;
+    private string errorDuringRegistrationMessage = string.Empty;
+    private string registrationInfo = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var pushRegistration = await localStorage.GetItemAsync<PushRegistration>("pushRegistration");
+        if (pushRegistration != null)
+        {
+            deviceName = pushRegistration.DeviceName;
+            SetSuccessfulState();
+        }
+    }
+
+    protected async Task RegisterForPushNotifications()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("registerForPush", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public async Task RegisterForPushNotificationsCallBackOnSuccess(PushRegistration pushRegistration)
+    {
+        pushRegistration.DeviceName = deviceName;
+        var response = await Http.PostAsJsonAsync<PushRegistration>("api/register-push", pushRegistration);
+        if (response.IsSuccessStatusCode)
+        {
+            await localStorage.SetItemAsync<PushRegistration>("pushRegistration", pushRegistration);
+            SetSuccessfulState();
+        }
+        else
+        {
+            errorDuringRegistrationMessage = $"Unable to configure your push registration with the server. Error: {await response.Content.ReadAsStringAsync()}";
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public void RegisterForPushNotificationsCallBackOnError(string message)
+    {
+        errorDuringRegistrationMessage = $"There was a problem registering your device for push notifications. Message: {message}";
+        StateHasChanged();
+    }
+
+    private void SetSuccessfulState()
+    {
+        registrationInfo = "You device has been successfully registered!";
+    }
+}

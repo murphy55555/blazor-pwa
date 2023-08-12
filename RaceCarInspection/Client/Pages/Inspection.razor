@@ -1,6 +1,138 @@
-﻿<h3>Inspection</h3>
-@page "/inspection/{InspectionId:int}"
+﻿@page "/inspection/{CarNumber:int}"
+@using RaceCarInspection.Client.Services;
+@using RaceCarInspection.Shared.Models;
+@inject IInspectionService inspectionService
+
+<EditForm Model="@carInspection.InspectionResult" OnSubmit="@CompleteInspection">
+    <div class="row">
+        <div class="col-sm-12 col-lg-8">
+            <div class="accordion" id="accordionPanelsStayOpenExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            General Race Car Information
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <h5 class="card-title">Car # @carInspection.CarNumber</h5>
+                            <h6 class="card-subtitle mb-2 text-body-secondary">@carInspection.Color @carInspection.Year @carInspection.Make @carInspection.Model</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                            Inspection Checklist
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.TiresPass" id="tiresPass" />
+                                <label class="form-check-label" for="tiresPass">Tires (Treadwear, lug nuts, age)</label>
+                            </div>
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.ChassisPass" id="ChassisPass" />
+                                <label class="form-check-label" for="ChassisPass">Chassis (Legal for race class)</label>
+                            </div>
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.BodyPass" id="BodyPass" />
+                                <label class="form-check-label" for="BodyPass">Body (Hood latched, panels secure)</label>
+                            </div>
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.SteeringPass" id="SteeringPass" />
+                                <label class="form-check-label" for="SteeringPass">Steering (Steering wheel calibrated & secure)</label>
+                            </div>
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.EnginePass" id="EnginePass" />
+                                <label class="form-check-label" for="EnginePass">Engine (Battery secure, hoses clamped, no leaks)</label>
+                            </div>
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.HelmetPass" id="HelmetPass" />
+                                <label class="form-check-label" for="HelmetPass">Helmet (Meets SA requirements)</label>
+                            </div>
+                            <div class="mb-3 mt-3">
+                                <label for="overallComments" class="form-label">Overall Comments</label>
+                                <InputTextArea class="form-control" id="overallComments" rows="3" @bind-Value="carInspection.InspectionResult.OverallComments"></InputTextArea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                            Add Images & Video
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <h6 class="card-subtitle mb-2 text-body-secondary">Upload image from Gallery</h6>
+                            <InputFile OnChange="@AddFiles" multiple accept="image/png, image/jpeg" />
+                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles)
+                            {
+                                <div class="card m-3">
+                                    <img src="@file.ThumbnailBase64" class="card-img-top">
+                                    <div class="card-body">
+                                        <p class="card-text">@file.IBrowserFile.Name</p>
+                                    </div>
+                                </div>
+                            }
+                            <h6 class="card-subtitle mb-2 text-body-secondary">Take Picture</h6>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                            Certify and Complete
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <button type="submit">Certify & Complete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
 @code {
     [Parameter]
-    public int InspectionId { get; set; }
+    public int CarNumber { get; set; }
+
+    private RaceCarInspection.Shared.Models.Inspection carInspection;
+    protected override async Task OnInitializedAsync()
+    {
+        carInspection = await inspectionService.GetInspection(CarNumber);
+    }
+
+    private async Task AddFiles(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var mediaFile = new SupportingMediaFile();
+            mediaFile.IBrowserFile = file;
+            mediaFile.ThumbnailBase64 = await GetThumbnailUrl(file);
+            carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
+        }
+    }
+
+    private async Task<string> GetThumbnailUrl(IBrowserFile imgFile)
+    {
+        string imageType = imgFile.ContentType;
+        var resizedImageFile = await imgFile.RequestImageFileAsync(imageType, 1000, 1000);
+        var buffers = new byte[resizedImageFile.Size];
+        await resizedImageFile.OpenReadStream().ReadAsync(buffers);
+        var val = $"data:{imageType};base64,{Convert.ToBase64String(buffers)}";
+        return val;
+    }
+
+    private async Task CompleteInspection()
+    {
+
+    }
 }

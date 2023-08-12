@@ -9,3 +9,7 @@
 /RaceCarInspection/Server/obj
 /RaceCarInspection/Shared/bin/Debug/net7.0
 /RaceCarInspection/Shared/obj
+/RaceCarInspection/Client/wwwroot/racing.mp4
+/RaceCarInspection/Client/wwwroot/Car_Fire_Safety.pdf
+/RaceCarInspection/Client/wwwroot/checklist.pdf
+/RaceCarInspection/Client/wwwroot/engine.wav

@@ -5,7 +5,7 @@
 
 <div class="mb-4">
     <span class="h3">Assigned Inspections</span>
-    <span class="oi oi-bell float-end text-primary" aria-hidden="true"></span>
+    <span class="oi oi-bell float-end text-primary" aria-hidden="true" role="button" @onclick='() => navigationManager.NavigateTo("/push-notifications")'></span>
 </div>
 
 <div class="list-group">
@@ -22,13 +22,13 @@
 </div>
 
 @code {
-    private List<RaceCarInspection.Client.Models.Inspection> inspections = new List<RaceCarInspection.Client.Models.Inspection>();
+    private List<RaceCarInspection.Shared.Models.Inspection> inspections = new List<RaceCarInspection.Shared.Models.Inspection>();
     protected override async Task OnInitializedAsync()
     {
         inspections = await inspectionService.GetInspections();
     }
 
-    private string GetCarDescription(RaceCarInspection.Client.Models.Inspection inspection)
+    private string GetCarDescription(RaceCarInspection.Shared.Models.Inspection inspection)
     {
         return $"Car #{inspection.CarNumber} - {inspection.Color} {inspection.Make} {inspection.Model}";
     }
