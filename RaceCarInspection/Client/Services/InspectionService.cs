@@ -1,17 +1,56 @@
-﻿using RaceCarInspection.Shared.Models;
+﻿using RaceCarInspection.Client.Data;
+using RaceCarInspection.Shared.Models;
 
 namespace RaceCarInspection.Client.Services
 {
     public class InspectionService : IInspectionService
     {
-        public async Task<Inspection> GetInspection(int carNumber)
+        private readonly CarInspectionIndexedDb indexedDb;
+
+        public InspectionService(CarInspectionIndexedDb indexedDb)
         {
-            return (await GetInspections())?.FirstOrDefault(i=>i.CarNumber == carNumber);
+            this.indexedDb = indexedDb;
         }
 
-        public Task<List<Inspection>> GetInspections()
+        public async Task CompleteInspection(Inspection inspection)
         {
-            return Task.FromResult(new List<Inspection>()
+            await indexedDb.UpdateItems(new List<Inspection> { inspection });
+        }
+
+        public async Task<Inspection> GetInspection(int carNumber)
+        {
+            return await indexedDb.GetByKey<int, Inspection>(carNumber);
+        }
+
+        public async Task<List<Inspection>> GetInspections()
+        {
+            //await AddInspectionsToLocalDB();
+
+            //return new List<Inspection>()
+            //{
+            //    new Inspection()
+            //    {
+            //        CarNumber = 1,
+            //        Make = "Mitsubishi",
+            //        Model = "Lancer Evolution X MR",
+            //        Year = 2015,
+            //        Color = "Red"
+            //    },
+            //    new Inspection()
+            //    {
+            //        CarNumber = 36,
+            //        Make = "Nissan",
+            //        Model = "GTR",
+            //        Year = 2020,
+            //        Color = "Grey"
+            //    },
+            //};
+            return await indexedDb.GetAll<Inspection>();
+        }
+
+        public async Task AddInspectionsToLocalDB()
+        {
+            var inspections = new List<Inspection>()
             {
                 new Inspection()
                 {
@@ -29,7 +68,8 @@ namespace RaceCarInspection.Client.Services
                     Year = 2020,
                     Color = "Grey"
                 },
-            });
+            };
+            await indexedDb.AddItems(inspections);
         }
 
         public Task<List<StandardOperatingProcedure>> GetStandardOperatingProcedures()
@@ -77,6 +117,11 @@ namespace RaceCarInspection.Client.Services
                     FullPath = "/racing.mp4"
                 }
             });
+        }
+
+        public async Task Initialize()
+        {
+            await indexedDb.OpenIndexedDb();
         }
     }
 }

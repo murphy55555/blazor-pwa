@@ -15,6 +15,9 @@ namespace RaceCarInspection.Shared.Models
         public bool EnginePass { get; set; }
         public bool HelmetPass { get; set; }
         public string OverallComments { get; set; }
+        public Geolocation Geolocation { get; set; } = new Geolocation();
+        public DateTime? Started { get; set; }
+        public DateTime? Completed { get; set; }
 
         public List<SupportingMediaFile> SupportingMediaFiles { get; set; } = new List<SupportingMediaFile>();
     }

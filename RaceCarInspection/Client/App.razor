@@ -1,4 +1,7 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using RaceCarInspection.Client.Services;
+@inject IInspectionService inspectionService
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -10,3 +13,9 @@
         </LayoutView>
     </NotFound>
 </Router>
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await inspectionService.Initialize();
+    }
+}

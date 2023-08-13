@@ -3,6 +3,7 @@
 @using RaceCarInspection.Shared.Models;
 @inject IInspectionService inspectionService
 @inject IJSRuntime JS
+@inject NavigationManager navigationManager;
 
 <div class="modal fade" id="mediaCaptureModal" tabindex="-1">
     <div class="modal-dialog modal-fullscreen">
@@ -12,7 +13,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <video id="videoFeed" height="300" width="480" /><canvas class="d-none" id="thumbnailCanvas" height="300" width="480" /><br />
+                @if (mediaCaptureMode == "playing-video")
+                {
+                    <video height="300" width="480" controls src="@base64VideoToPlay" />
+                }
+                else
+                {
+                    <video id="videoFeed" height="300" width="480" />
+                    <canvas class="d-none" id="thumbnailCanvas" height="300" width="480" />
+                    <br />
+                }
             </div>
             <div class="modal-footer">
                 @if (isRecording)
@@ -25,17 +35,27 @@
                 }
                 else
                 {
-                    <button type="button" class="btn btn-primary" @onclick="StartRecording">
-                        <span class="oi oi-media-record" aria-hidden="true"></span>
-                        <span role="status">Start Recording</span>
-                    </button>
+                    if (mediaCaptureMode == "video")
+                    {
+                        <button type="button" class="btn btn-primary" @onclick="StartRecording">
+                            <span class="oi oi-video" aria-hidden="true"></span>
+                            <span role="status">Start Recording</span>
+                        </button>
+                    }
+                    else if (mediaCaptureMode == "picture")
+                    {
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="TakePicture">
+                            <span class="oi oi-camera-slr" aria-hidden="true"></span>
+                            <span role="status">Take Picture</span>
+                        </button>
+                    }
                 }
             </div>
         </div>
     </div>
 </div>
 
-<EditForm Model="@carInspection.InspectionResult" OnSubmit="@CompleteInspection">
+<EditForm Model="@carInspection.InspectionResult" >
     <div class="row">
         <div class="col-sm-12 col-lg-8">
             <div class="accordion" id="accordionPanelsStayOpenExample">
@@ -49,106 +69,153 @@
                         <div class="accordion-body">
                             <h5 class="card-title">Car # @carInspection.CarNumber</h5>
                             <h6 class="card-subtitle mb-2 text-body-secondary">@carInspection.Color @carInspection.Year @carInspection.Make @carInspection.Model</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
-                            Inspection Checklist
-                        </button>
-                    </h2>
-                    <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.TiresPass" id="tiresPass" />
-                                <label class="form-check-label" for="tiresPass">Tires (Treadwear, lug nuts, age)</label>
-                            </div>
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.ChassisPass" id="ChassisPass" />
-                                <label class="form-check-label" for="ChassisPass">Chassis (Legal for race class)</label>
-                            </div>
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.BodyPass" id="BodyPass" />
-                                <label class="form-check-label" for="BodyPass">Body (Hood latched, panels secure)</label>
-                            </div>
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.SteeringPass" id="SteeringPass" />
-                                <label class="form-check-label" for="SteeringPass">Steering (Steering wheel calibrated & secure)</label>
-                            </div>
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.EnginePass" id="EnginePass" />
-                                <label class="form-check-label" for="EnginePass">Engine (Battery secure, hoses clamped, no leaks)</label>
-                            </div>
-                            <div class="form-check">
-                                <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.HelmetPass" id="HelmetPass" />
-                                <label class="form-check-label" for="HelmetPass">Helmet (Meets SA requirements)</label>
-                            </div>
-                            <div class="mb-3 mt-3">
-                                <label for="overallComments" class="form-label">Overall Comments</label>
-                                <InputTextArea class="form-control" id="overallComments" rows="3" @bind-Value="carInspection.InspectionResult.OverallComments"></InputTextArea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
-                            Upload Images from Gallery
-                        </button>
-                    </h2>
-                    <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <h6 class="card-subtitle mb-2 text-body-secondary">Upload images from Gallery</h6>
-                            <InputFile OnChange="@AddFiles" multiple accept="image/png, image/jpeg" />
-                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles.Where(s=>s.MediaFileType == MediaFileType.UploadedGalleryImage))
+                            @if (!carInspection.InspectionResult.Started.HasValue)
                             {
-                                <div class="card m-3">
-                                    <img src="@file.ThumbnailBase64" class="card-img-top">
-                                    <div class="card-body">
-                                        <p class="card-text">@file.IBrowserFile.Name</p>
-                                    </div>
-                                </div>
+                                <button class="btn btn-primary mb-3" @onclick="StartInspection">Start Inspection</button>
                             }
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
-                            Capture Media using Camera
-                        </button>
-                    </h2>
-                    <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("video")'>Take Video</button>
-                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("picture")'>Take Picture</button>
-                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles.Where(s => s.MediaFileType == MediaFileType.RecordedVideo))
+                            else
                             {
-                                <div class="card m-3">
-                                    <img src="@file.ThumbnailBase64" class="card-img-top">
-                                    <div class="card-body">
-                                        <p class="card-text">Video recording started at @file.CaptureStartTime</p>
-                                        <p class="card-text">Length is @file.LengthInSeconds seconds</p>
-                                    </div>
-                                </div>
-                            }
+                                <p>Inspection Started at @carInspection.InspectionResult.Started near location</p> <strong>Latitude: </strong> @carInspection.InspectionResult.Geolocation.Latitude <strong>Longitude: </strong> @carInspection.InspectionResult.Geolocation.Longitude
+                                @if (carInspection.InspectionResult.Completed.HasValue)
+                                {
+                                    <h5 class="text-success oi oi-check">  This inspection was completed at @carInspection.InspectionResult.Completed</h5>
+                                }
+                                <br>
 
+                                <NavLink href='@($"geo:{carInspection.InspectionResult.Geolocation.Latitude},{carInspection.InspectionResult.Geolocation.Longitude}")'>Show on Map (Geo: scheme)</NavLink>
+                                <br>
+                                <NavLink href='@($"https://www.google.com/maps/search/?api=1&query={carInspection.InspectionResult.Geolocation.Latitude},{carInspection.InspectionResult.Geolocation.Longitude}")'>Show on Map (Google/Android scheme)</NavLink>
+                                <br>
+                                <NavLink href='@($"http://maps.apple.com/?ll={carInspection.InspectionResult.Geolocation.Latitude},{carInspection.InspectionResult.Geolocation.Longitude}")'>Show on Map (Apple scheme)</NavLink>
+                            }
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
-                            Certify and Complete
-                        </button>
-                    </h2>
-                    <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <button type="submit">Certify & Complete</button>
+                @if (carInspection.InspectionResult.Started.HasValue)
+                {
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                                Inspection Checklist
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.TiresPass" id="tiresPass" />
+                                    <label class="form-check-label" for="tiresPass">Tires (Treadwear, lug nuts, age)</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.ChassisPass" id="ChassisPass" />
+                                    <label class="form-check-label" for="ChassisPass">Chassis (Legal for race class)</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.BodyPass" id="BodyPass" />
+                                    <label class="form-check-label" for="BodyPass">Body (Hood latched, panels secure)</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.SteeringPass" id="SteeringPass" />
+                                    <label class="form-check-label" for="SteeringPass">Steering (Steering wheel calibrated & secure)</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.EnginePass" id="EnginePass" />
+                                    <label class="form-check-label" for="EnginePass">Engine (Battery secure, hoses clamped, no leaks)</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="carInspection.InspectionResult.HelmetPass" id="HelmetPass" />
+                                    <label class="form-check-label" for="HelmetPass">Helmet (Meets SA requirements)</label>
+                                </div>
+                                <div class="mb-3 mt-3">
+                                    <label for="overallComments" class="form-label">Overall Comments</label>
+                                    <InputTextArea class="form-control" id="overallComments" rows="3" @bind-Value="carInspection.InspectionResult.OverallComments"></InputTextArea>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                                Upload Images from Gallery
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <h6 class="card-subtitle mb-2 text-body-secondary">Upload images from Gallery</h6>
+                                <InputFile OnChange="@AddFiles" multiple accept="image/png, image/jpeg" />
+                                @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles.Where(s => s.MediaFileType == MediaFileType.UploadedGalleryImage))
+                                {
+                                    <div class="card m-3">
+                                        <img src="@file.ThumbnailBase64" class="card-img-top">
+                                        <div class="card-body">
+                                            <p class="card-text">@file.Name</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+                                Capture Media using Camera
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("video")'>Take Video</button>
+                                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("picture")'>Take Picture</button>
+
+                                <div class="card-text ">Here are two bonus buttons/inputs that only work on mobile and simply open the device's native camera. How cool!</div>
+                                <label class="form-check-label mt-2" for="back-camera">Front Camera</label>
+                                <InputFile OnChange="@AddFilesNativeCamera" id="back-camera" type="file" accept="image/*" capture="environment" />
+
+                                <label class="form-check-label mt-2" for="front-camera">Selfie Camera</label>
+                                <InputFile OnChange="@AddFilesNativeCamera" id="front-camera" type="file" accept="image/*" capture="user" />
+                                
+
+                                @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles)
+                                {
+                                    if (file.MediaFileType == MediaFileType.RecordedVideo)
+                                    {
+                                        <div class="card m-3">
+                                            <img src="@file.ThumbnailBase64" class="card-img-top">
+                                            <div class="card-body">
+                                                <p class="card-text">Video recording started at @file.CaptureStartTime</p>
+                                                <p class="card-text">Length is @file.LengthInSeconds seconds</p>
+                                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='()=>PlayStoredVideo(file)'>Play Video</button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else if (file.MediaFileType == MediaFileType.CapturedImage)
+                                    {
+                                        <div class="card m-3">
+                                            <img src="@file.ThumbnailBase64" class="card-img-top">
+                                            <div class="card-body">
+                                                <p class="card-text">Picture taken at @file.CaptureStartTime</p>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                                Certify and Complete
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <button type="button" class="btn btn-success" @onclick="CompleteInspection">
+                                    <span class="oi oi-badge" aria-hidden="true"></span>
+                                    <span role="status">Certify & Complete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -157,32 +224,57 @@
 @code {
     [Parameter]
     public int CarNumber { get; set; }
-    private RaceCarInspection.Shared.Models.Inspection carInspection;
+
+    private RaceCarInspection.Shared.Models.Inspection carInspection = new RaceCarInspection.Shared.Models.Inspection();
     public string mediaCaptureMode;
     public string mediaCaptureTitle;
     public bool isRecording = false;
     private DateTime startRecordTime;
+    private bool playingStoredVideo;
+    private string base64VideoToPlay;
 
     protected override async Task OnInitializedAsync()
     {
         carInspection = await inspectionService.GetInspection(CarNumber);
     }
 
+    private async Task StartInspection()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        carInspection.InspectionResult.Geolocation = await jsInProcess.InvokeAsync<Geolocation>("getGeoLocation");
+        carInspection.InspectionResult.Started = DateTime.Now;
+    }
+
     private async Task AddFiles(InputFileChangeEventArgs e)
     {
         foreach (var file in e.GetMultipleFiles())
         {
-            var mediaFile = new SupportingMediaFile();
-            mediaFile.IBrowserFile = file;
-            mediaFile.MediaFileType = MediaFileType.UploadedGalleryImage;
-            mediaFile.ThumbnailBase64 = await GetThumbnailUrl(file);
-            carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
+            await CreateMediaFile(file, MediaFileType.UploadedGalleryImage);
         }
     }
 
-    private async Task<string> GetThumbnailUrl(IBrowserFile imgFile)
+    private async Task AddFilesNativeCamera(InputFileChangeEventArgs e)
+    {
+        await CreateMediaFile(e.File, MediaFileType.CapturedImage);
+    }
+
+    private async Task CreateMediaFile(IBrowserFile file, MediaFileType type)
+    {
+        var mediaFile = new SupportingMediaFile();
+        mediaFile.Id = Guid.NewGuid();
+        mediaFile.ContentType = file.ContentType;
+        mediaFile.Name = file.Name;
+        mediaFile.MediaFileType = type;
+        mediaFile.CaptureStartTime = DateTime.Now;
+        mediaFile.ThumbnailBase64 = await GetBase64String(file);
+        mediaFile.CapturedBase64Data = await GetBase64String(file);
+        carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
+    }
+
+    private async Task<string> GetBase64String(IBrowserFile imgFile)
     {
         string imageType = imgFile.ContentType;
+        // Note: This is just a demo app. In the real world, we'd need to use the actual dimensions
         var resizedImageFile = await imgFile.RequestImageFileAsync(imageType, 1000, 1000);
         var buffers = new byte[resizedImageFile.Size];
         await resizedImageFile.OpenReadStream().ReadAsync(buffers);
@@ -196,8 +288,12 @@
         if (mode == "video")
         {
             mediaCaptureTitle = "Capture a video to add to the inspection";
-            await StartCapture();
         }
+        else
+        {
+            mediaCaptureTitle = "Take a picture to add to the inspection";
+        }
+        await StartCapture();
     }
 
     private async Task StartCapture()
@@ -225,6 +321,9 @@
     public async Task OnRecordingDataAvailable(string thumbnail, string base64VideoFile)
     {
         var mediaFile = new SupportingMediaFile();
+        mediaFile.Id = Guid.NewGuid();
+        mediaFile.ContentType = "audio/webm";
+        mediaFile.Name = $"Recording - {mediaFile.Id}";
         mediaFile.CaptureStartTime = startRecordTime;
         mediaFile.LengthInSeconds = DateTime.Now.Subtract(startRecordTime).Seconds;
         mediaFile.ThumbnailBase64 = thumbnail;
@@ -234,8 +333,38 @@
         StateHasChanged();
     }
 
+    [JSInvokable]
+    public async Task OnPictureDataAvailable(string base64PictureFile)
+    {
+        var mediaFile = new SupportingMediaFile();
+        mediaFile.Id = Guid.NewGuid();
+        mediaFile.ContentType = "image/jpeg";
+        mediaFile.Name = $"Image - {mediaFile.Id}";
+        mediaFile.CaptureStartTime = DateTime.Now;
+        mediaFile.ThumbnailBase64 = base64PictureFile;
+        mediaFile.CapturedBase64Data = base64PictureFile;
+        mediaFile.MediaFileType = MediaFileType.CapturedImage;
+        carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
+        StateHasChanged();
+    }
+
+    private async Task PlayStoredVideo(SupportingMediaFile videoFile)
+    {
+        mediaCaptureTitle = $"Playing captured video from {videoFile.CaptureStartTime}";
+        mediaCaptureMode = "playing-video";
+        base64VideoToPlay = videoFile.CapturedBase64Data;
+    }
+
+    private async Task TakePicture()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("takePicture", "videoFeed", "thumbnailCanvas", DotNetObjectReference.Create(this));
+    }
+
     private async Task CompleteInspection()
     {
-
+        carInspection.InspectionResult.Completed = DateTime.Now;
+        await inspectionService.CompleteInspection(carInspection);
+        navigationManager.NavigateTo("/my-inspections");
     }
 }

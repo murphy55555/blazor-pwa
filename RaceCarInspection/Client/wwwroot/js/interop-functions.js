@@ -37,12 +37,24 @@ function registerForPush(componentInstance) {
                             componentInstance.invokeMethodAsync('RegisterForPushNotificationsCallBackOnSuccess', subscriptionData);
                         })
                         .catch(function (e) {
-                            console.log(e);
                             componentInstance.invokeMethodAsync('RegisterForPushNotificationsCallBackOnError', JSON.stringify(e.message));
                         });
                 });
         });
     });
+}
+
+async function getGeoLocation() {
+    let getGeoPromise = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(position => {
+            resolve({
+                Latitude: position.coords.latitude,
+                Longitude: position.coords.longitude
+            });
+        })
+    });
+
+    return await getGeoPromise;
 }
 
 function startVideo(src) {
@@ -75,7 +87,6 @@ async function startRecordingVideo(videoPlayerSrcId, canvasSrcId, componentInsta
     canvas.getContext('2d').drawImage(video, 0, 0, 480, 300);
     window.mediaRecorder = new MediaRecorder(video.srcObject, { mimetype: 'audio/webm' });
     mediaRecorder.start();
-    console.log(mediaRecorder);
     mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
             chunks.push(e.data);
@@ -84,8 +95,22 @@ async function startRecordingVideo(videoPlayerSrcId, canvasSrcId, componentInsta
     mediaRecorder.onstop = async () => {
         const base64VideoFile = await blobToBase64(new Blob(chunks, { type: 'audio/webm' }));
         const base64Thumbnail = canvas.toDataURL("image/jpeg");
+        video.pause();
+        video.currentTime = 0;
         componentInstance.invokeMethodAsync('OnRecordingDataAvailable', base64Thumbnail, base64VideoFile);
     }
+}
+
+async function takePicture(videoPlayerSrcId, canvasSrcId, componentInstance) {
+    let video = document.getElementById(videoPlayerSrcId);
+    let canvas = document.getElementById(canvasSrcId);
+    canvas.getContext('2d').drawImage(video, 0, 0, 480, 300);
+    const base64Picture = canvas.toDataURL("image/jpeg");
+    // Note: In the real world we'd take a much larger picture. 300x480 is tiny and just an example
+
+    video.pause();
+    video.currentTime = 0;
+    componentInstance.invokeMethodAsync('OnPictureDataAvailable', base64Picture);
 }
 
 function stopRecordingVideo() {
