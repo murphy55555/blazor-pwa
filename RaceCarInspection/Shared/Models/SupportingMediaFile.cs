@@ -9,7 +9,11 @@ namespace RaceCarInspection.Shared.Models
 {
     public class SupportingMediaFile
     {
+        public MediaFileType MediaFileType { get; set; }
         public IBrowserFile IBrowserFile { get; set; }
         public string ThumbnailBase64 { get; set; }
+        public string CapturedBase64Data { get; set; }
+        public DateTime CaptureStartTime { get; set; }
+        public int LengthInSeconds { get; set; }
     }
 }

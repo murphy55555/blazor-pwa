@@ -2,6 +2,38 @@
 @using RaceCarInspection.Client.Services;
 @using RaceCarInspection.Shared.Models;
 @inject IInspectionService inspectionService
+@inject IJSRuntime JS
+
+<div class="modal fade" id="mediaCaptureModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@mediaCaptureTitle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <video id="videoFeed" height="300" width="480" /><canvas class="d-none" id="thumbnailCanvas" height="300" width="480" /><br />
+            </div>
+            <div class="modal-footer">
+                @if (isRecording)
+                {
+                    <h4>Now Recording...</h4>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="StopRecording">
+                        <span class="spinner-grow spinner-grow-sm text-danger" aria-hidden="true"></span>
+                        <span role="status">Stop</span>
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" @onclick="StartRecording">
+                        <span class="oi oi-media-record" aria-hidden="true"></span>
+                        <span role="status">Start Recording</span>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
 <EditForm Model="@carInspection.InspectionResult" OnSubmit="@CompleteInspection">
     <div class="row">
@@ -62,14 +94,14 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
-                            Add Images & Video
+                            Upload Images from Gallery
                         </button>
                     </h2>
                     <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
                         <div class="accordion-body">
-                            <h6 class="card-subtitle mb-2 text-body-secondary">Upload image from Gallery</h6>
+                            <h6 class="card-subtitle mb-2 text-body-secondary">Upload images from Gallery</h6>
                             <InputFile OnChange="@AddFiles" multiple accept="image/png, image/jpeg" />
-                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles)
+                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles.Where(s=>s.MediaFileType == MediaFileType.UploadedGalleryImage))
                             {
                                 <div class="card m-3">
                                     <img src="@file.ThumbnailBase64" class="card-img-top">
@@ -78,7 +110,29 @@
                                     </div>
                                 </div>
                             }
-                            <h6 class="card-subtitle mb-2 text-body-secondary">Take Picture</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+                            Capture Media using Camera
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("video")'>Take Video</button>
+                            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mediaCaptureModal" @onclick='() => SetCaptureMode("picture")'>Take Picture</button>
+                            @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles.Where(s => s.MediaFileType == MediaFileType.RecordedVideo))
+                            {
+                                <div class="card m-3">
+                                    <img src="@file.ThumbnailBase64" class="card-img-top">
+                                    <div class="card-body">
+                                        <p class="card-text">Video recording started at @file.CaptureStartTime</p>
+                                        <p class="card-text">Length is @file.LengthInSeconds seconds</p>
+                                    </div>
+                                </div>
+                            }
 
                         </div>
                     </div>
@@ -103,8 +157,12 @@
 @code {
     [Parameter]
     public int CarNumber { get; set; }
-
     private RaceCarInspection.Shared.Models.Inspection carInspection;
+    public string mediaCaptureMode;
+    public string mediaCaptureTitle;
+    public bool isRecording = false;
+    private DateTime startRecordTime;
+
     protected override async Task OnInitializedAsync()
     {
         carInspection = await inspectionService.GetInspection(CarNumber);
@@ -116,6 +174,7 @@
         {
             var mediaFile = new SupportingMediaFile();
             mediaFile.IBrowserFile = file;
+            mediaFile.MediaFileType = MediaFileType.UploadedGalleryImage;
             mediaFile.ThumbnailBase64 = await GetThumbnailUrl(file);
             carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
         }
@@ -129,6 +188,50 @@
         await resizedImageFile.OpenReadStream().ReadAsync(buffers);
         var val = $"data:{imageType};base64,{Convert.ToBase64String(buffers)}";
         return val;
+    }
+
+    private async Task SetCaptureMode(string mode)
+    {
+        mediaCaptureMode = mode;
+        if (mode == "video")
+        {
+            mediaCaptureTitle = "Capture a video to add to the inspection";
+            await StartCapture();
+        }
+    }
+
+    private async Task StartCapture()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("startVideo", "videoFeed");
+    }
+
+    private async Task StartRecording()
+    {
+        isRecording = true;
+        startRecordTime = DateTime.Now;
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("startRecordingVideo", "videoFeed", "thumbnailCanvas", DotNetObjectReference.Create(this));
+    }
+
+    private async Task StopRecording()
+    {
+        isRecording = false;
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("stopRecordingVideo");
+    }
+
+    [JSInvokable]
+    public async Task OnRecordingDataAvailable(string thumbnail, string base64VideoFile)
+    {
+        var mediaFile = new SupportingMediaFile();
+        mediaFile.CaptureStartTime = startRecordTime;
+        mediaFile.LengthInSeconds = DateTime.Now.Subtract(startRecordTime).Seconds;
+        mediaFile.ThumbnailBase64 = thumbnail;
+        mediaFile.CapturedBase64Data = base64VideoFile;
+        mediaFile.MediaFileType = MediaFileType.RecordedVideo;
+        carInspection.InspectionResult.SupportingMediaFiles.Add(mediaFile);
+        StateHasChanged();
     }
 
     private async Task CompleteInspection()
