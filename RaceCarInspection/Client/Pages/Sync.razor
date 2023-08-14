@@ -1,5 +1,11 @@
 ﻿<h3>Sync</h3>
 @page "/sync"
-@code {
+@using RaceCarInspection.Client.Services;
+@inject ISyncService syncService
 
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await syncService.SyncData();
+    }
 }

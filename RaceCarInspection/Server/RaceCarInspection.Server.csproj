@@ -8,11 +8,26 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Client\RaceCarInspection.Client.csproj" />
     <ProjectReference Include="..\Shared\RaceCarInspection.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\SyncContent\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\SyncContent\brakes.jpg" />
+    <None Include="wwwroot\SyncContent\Car_Fire_Safety.pdf" />
+    <None Include="wwwroot\SyncContent\checklist.pdf" />
+    <None Include="wwwroot\SyncContent\engine.wav" />
+    <None Include="wwwroot\SyncContent\racing.mp4" />
   </ItemGroup>
 
 

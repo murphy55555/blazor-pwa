@@ -81,7 +81,7 @@ namespace RaceCarInspection.Client.Services
                     Id = 1,
                     FileName = "Fire Safety",
                     Description = "Manual that describes the fire safety rules",
-                    FileType = "pdf",
+                    ContentType = "pdf",
                     FullPath = "/Car_Fire_Safety.pdf"
                 },
                 new StandardOperatingProcedure()
@@ -89,7 +89,7 @@ namespace RaceCarInspection.Client.Services
                     Id = 2,
                     FileName = "Inspection Criteria",
                     Description = "Manual that describes the inspection criteria",
-                    FileType = "pdf",
+                    ContentType = "pdf",
                     FullPath = "/checklist.pdf"
                 },
                 new StandardOperatingProcedure()
@@ -97,7 +97,7 @@ namespace RaceCarInspection.Client.Services
                     Id = 3,
                     FileName = "Worn vs Good Rotors & Pads",
                     Description = "Good brakes are a must when racing. See examples of good vs bad.",
-                    FileType = "jpg",
+                    ContentType = "jpg",
                     FullPath = "/brakes.jpg"
                 },
                 new StandardOperatingProcedure()
@@ -105,7 +105,7 @@ namespace RaceCarInspection.Client.Services
                     Id = 4,
                     FileName = "Engine Sound",
                     Description = "Listen to the sound of a great engine",
-                    FileType = "wav",
+                    ContentType = "wav",
                     FullPath = "/engine.wav"
                 },
                 new StandardOperatingProcedure()
@@ -113,7 +113,7 @@ namespace RaceCarInspection.Client.Services
                     Id = 5,
                     FileName = "A race example",
                     Description = "Just in case you are a new instructor, this is racing. =)",
-                    FileType = "mp4",
+                    ContentType = "mp4",
                     FullPath = "/racing.mp4"
                 }
             });

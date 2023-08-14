@@ -4,13 +4,13 @@
 @inject IInspectionService inspectionService
 
 <h3>@sop.FileName</h3>
-@if (sop.FileType == "wav")
+@if (sop.ContentType == "wav")
 {
     <audio controls>
         <source src="@sop.FullPath" type="audio/wav">
     </audio>
 }
-@if (sop.FileType == "mp4")
+@if (sop.ContentType == "mp4")
 {
         <div class="row">
         <div class="col-sm-12 col-lg-8">
@@ -20,7 +20,7 @@
         </div>
     </div>
 }
-@if (sop.FileType == "jpg")
+@if (sop.ContentType == "jpg")
 {
     <div class="row">
         <div class="col-sm-12 col-lg-8">
@@ -28,7 +28,7 @@
         </div>
     </div>
 }
-@if (sop.FileType == "pdf")
+@if (sop.ContentType == "pdf")
 {
     <a href="@sop.FullPath" target="_blank">Open in new tab</a>
     <div class="row">

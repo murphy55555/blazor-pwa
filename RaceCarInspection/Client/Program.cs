@@ -15,6 +15,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<IInspectionService, InspectionService>();
+builder.Services.AddScoped<ISyncService, SyncService>();
 builder.Services.AddBlazoredLocalStorageAsSingleton();
 builder.Services.AddIndexedDbDatabase<CarInspectionIndexedDb>(options =>
 {

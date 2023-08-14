@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using RaceCarInspection.Server.Data;
+using RaceCarInspection.Server.Services;
+using Swashbuckle.AspNetCore.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddTransient<ICarInspectionData, CarInspectionData>();
+builder.Services.AddTransient<ISyncService, SyncService>();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -32,5 +38,6 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
-
+app.UseSwagger();
+app.UseSwaggerUI();
 app.Run();
