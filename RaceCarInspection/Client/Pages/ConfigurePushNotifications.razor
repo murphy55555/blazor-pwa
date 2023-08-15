@@ -31,7 +31,7 @@
     protected override async Task OnInitializedAsync()
     {
         var pushRegistration = await localStorage.GetItemAsync<PushRegistration>("pushRegistration");
-        if (pushRegistration != null)
+        if (pushRegistration != null && !string.IsNullOrEmpty(pushRegistration.Auth))
         {
             deviceName = pushRegistration.DeviceName;
             SetSuccessfulState();

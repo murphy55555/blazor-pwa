@@ -21,9 +21,12 @@ builder.Services.AddIndexedDbDatabase<CarInspectionIndexedDb>(options =>
 {
     var model = new IndexedDbDatabaseModel()
             .WithName("CarInspections")
-            .WithVersion(1)
-            .WithModelId(0);
+            .WithVersion(1);
+
     model.AddStore<Inspection>();
+    model.AddStore<StandardOperatingProcedure>();
+    model.AddStore<StandardOperatingProcedureData>();
+    
     options.UseDatabase(model);
 });
 

@@ -24,104 +24,56 @@ namespace RaceCarInspection.Client.Services
 
         public async Task<List<Inspection>> GetInspections()
         {
-            //await AddInspectionsToLocalDB();
-
-            //return new List<Inspection>()
-            //{
-            //    new Inspection()
-            //    {
-            //        CarNumber = 1,
-            //        Make = "Mitsubishi",
-            //        Model = "Lancer Evolution X MR",
-            //        Year = 2015,
-            //        Color = "Red"
-            //    },
-            //    new Inspection()
-            //    {
-            //        CarNumber = 36,
-            //        Make = "Nissan",
-            //        Model = "GTR",
-            //        Year = 2020,
-            //        Color = "Grey"
-            //    },
-            //};
             return await indexedDb.GetAll<Inspection>();
         }
 
-        public async Task AddInspectionsToLocalDB()
+        public async Task SaveOrUpdateInspection(Inspection inspection)
         {
-            var inspections = new List<Inspection>()
+            var localCopy = await indexedDb.GetByKey<int, Inspection>(inspection.CarNumber);
+            if (localCopy != null)
             {
-                new Inspection()
-                {
-                    CarNumber = 1,
-                    Make = "Mitsubishi",
-                    Model = "Lancer Evolution X MR",
-                    Year = 2015,
-                    Color = "Red"
-                },
-                new Inspection()
-                {
-                    CarNumber = 36,
-                    Make = "Nissan",
-                    Model = "GTR",
-                    Year = 2020,
-                    Color = "Grey"
-                },
-            };
-            await indexedDb.AddItems(inspections);
+                await indexedDb.DeleteByKey<int, Inspection>(inspection.CarNumber);
+            }
+
+            await indexedDb.AddItems(new List<Inspection> { inspection });
         }
 
-        public Task<List<StandardOperatingProcedure>> GetStandardOperatingProcedures()
+        public async Task<List<StandardOperatingProcedure>> GetStandardOperatingProcedures()
         {
-            return Task.FromResult(new List<StandardOperatingProcedure>()
-            {
-                new StandardOperatingProcedure()
-                {
-                    Id = 1,
-                    FileName = "Fire Safety",
-                    Description = "Manual that describes the fire safety rules",
-                    ContentType = "pdf",
-                    FullPath = "/Car_Fire_Safety.pdf"
-                },
-                new StandardOperatingProcedure()
-                {
-                    Id = 2,
-                    FileName = "Inspection Criteria",
-                    Description = "Manual that describes the inspection criteria",
-                    ContentType = "pdf",
-                    FullPath = "/checklist.pdf"
-                },
-                new StandardOperatingProcedure()
-                {
-                    Id = 3,
-                    FileName = "Worn vs Good Rotors & Pads",
-                    Description = "Good brakes are a must when racing. See examples of good vs bad.",
-                    ContentType = "jpg",
-                    FullPath = "/brakes.jpg"
-                },
-                new StandardOperatingProcedure()
-                {
-                    Id = 4,
-                    FileName = "Engine Sound",
-                    Description = "Listen to the sound of a great engine",
-                    ContentType = "wav",
-                    FullPath = "/engine.wav"
-                },
-                new StandardOperatingProcedure()
-                {
-                    Id = 5,
-                    FileName = "A race example",
-                    Description = "Just in case you are a new instructor, this is racing. =)",
-                    ContentType = "mp4",
-                    FullPath = "/racing.mp4"
-                }
-            });
+            return await indexedDb.GetAll<StandardOperatingProcedure>();
+        }
+
+        public async Task<StandardOperatingProcedure> GetStandardOperatingProcedure(int id)
+        {
+            return await indexedDb.GetByKey<int, StandardOperatingProcedure>(id);
         }
 
         public async Task Initialize()
         {
             await indexedDb.OpenIndexedDb();
+        }
+
+        public async Task SaveOrUpdateSOP(StandardOperatingProcedure sop)
+        {
+            var localCopy = await indexedDb.GetByKey<int, StandardOperatingProcedure>(sop.Id);
+            if (localCopy == null)
+            {
+                await indexedDb.AddItems(new List<StandardOperatingProcedure> { sop });
+            }
+        }
+
+        public async Task SaveOrUpdateSOPData(StandardOperatingProcedureData standardOperatingProcedureData)
+        {
+            var localCopy = await indexedDb.GetByKey<int, StandardOperatingProcedureData>(standardOperatingProcedureData.Id);
+            if (localCopy == null)
+            {
+                await indexedDb.AddItems(new List<StandardOperatingProcedureData> { standardOperatingProcedureData });
+            }
+        }
+
+        public async Task<StandardOperatingProcedureData> GetStandardOperatingProcedureData(int id)
+        {
+            return await indexedDb.GetByKey<int, StandardOperatingProcedureData>(id);
         }
     }
 }

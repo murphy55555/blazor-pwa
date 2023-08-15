@@ -57,6 +57,22 @@ async function getGeoLocation() {
     return await getGeoPromise;
 }
 
+async function getBatteryInfo() {
+    console.log("in here");
+    let batteryStatus = new Promise((resolve, reject) => {
+        navigator.getBattery().then(status => {
+            console.log(status);
+            resolve({
+                Charging: status.charging,
+                DischargingTime: isFinite(status.dischargingTime) ? status.dischargingTime : 0,
+                Level: status.level
+            });
+        })
+    });
+
+    return await batteryStatus;
+}
+
 function startVideo(src) {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
