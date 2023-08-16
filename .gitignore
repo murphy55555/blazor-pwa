@@ -18,3 +18,6 @@
 /RaceCarInspection/Server/wwwroot/SyncContent/checklist.pdf
 /RaceCarInspection/Server/wwwroot/SyncContent/engine.wav
 /RaceCarInspection/Server/wwwroot/SyncContent/racing.mp4
+/RaceCarInspection/Client/bin/Release/net7.0
+/RaceCarInspection/Server/bin/Release/net7.0
+/RaceCarInspection/Shared/bin/Release/net7.0

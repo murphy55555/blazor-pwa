@@ -1,0 +1,28 @@
+﻿@using RaceCarInspection.Shared.Models;
+@model List<PushRegistration>
+
+@{
+    ViewData["Title"] = "Get";
+}
+
+<h1>Push Registrations</h1>
+<div>
+    <form action="/api/push" method="post">
+        <input name="message" id="message" />
+        <button type="submit">Send</button>
+        @if (ViewBag.Sent)
+        {
+            <p>
+                Message Sent!
+            </p>
+        }
+    </form>
+</div>
+<ul>
+    @foreach (var registration in Model)
+    {
+        <li>@registration.DeviceName</li>
+    }
+</ul>
+
+

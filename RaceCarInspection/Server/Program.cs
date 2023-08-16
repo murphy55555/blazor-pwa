@@ -11,6 +11,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddTransient<ICarInspectionData, CarInspectionData>();
 builder.Services.AddTransient<ISyncService, SyncService>();
+builder.Services.AddTransient<IPushRegistrations, PushRegistrations>();
+builder.Services.AddTransient<IPushNotificationService, PushNotificationService>();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
@@ -37,7 +39,8 @@ app.UseRouting();
 
 app.MapRazorPages();
 app.MapControllers();
-app.MapFallbackToFile("index.html");
 app.UseSwagger();
 app.UseSwaggerUI();
+app.MapFallbackToFile("index.html");
+
 app.Run();

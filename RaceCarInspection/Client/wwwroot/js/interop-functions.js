@@ -12,6 +12,16 @@
     }
     return outputArray;
 }
+async function configureBackgroundSync(enabled) {
+    const registration = await navigator.serviceWorker.ready;
+    try {
+        await registration.periodicSync.register("sync-car-inspections", {
+            minInterval: 5 * 1000,
+        });
+    } catch {
+        console.log("Periodic Sync could not be registered!");
+    }
+}
 
 function registerForPush(componentInstance) {
     let that = this;
@@ -25,7 +35,7 @@ function registerForPush(componentInstance) {
                         .subscribe({
                             userVisibleOnly: true,
                             applicationServerKey: urlBase64ToUint8Array(
-                                "BNxlpTE6rbWwmZsGLdJe3PFPYHTnHOT8C414xciDmLkOSfi5stKDDB8jAjjacDT37lIG5jSJS6-Fj71iFEYTSE8"
+                                "BMkGVTjSaIl7trQZkVeJmy9tswIjvz4woufuCoDPR37hKTDyLYcgRyi0svlz9bORzdnOOt5HVK5n9uIkU4hee-g"
                             )
                         })
                         .then(async function (sub) {

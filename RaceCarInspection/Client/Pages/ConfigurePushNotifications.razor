@@ -33,9 +33,9 @@
         var pushRegistration = await localStorage.GetItemAsync<PushRegistration>("pushRegistration");
         if (pushRegistration != null && !string.IsNullOrEmpty(pushRegistration.Auth))
         {
-            deviceName = pushRegistration.DeviceName;
             SetSuccessfulState();
         }
+        deviceName = pushRegistration?.DeviceName;
     }
 
     protected async Task RegisterForPushNotifications()
@@ -57,8 +57,8 @@
         else
         {
             errorDuringRegistrationMessage = $"Unable to configure your push registration with the server. Error: {await response.Content.ReadAsStringAsync()}";
-            StateHasChanged();
         }
+        StateHasChanged();
     }
 
     [JSInvokable]
