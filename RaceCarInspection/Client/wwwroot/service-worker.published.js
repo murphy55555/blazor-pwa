@@ -5,12 +5,9 @@ self.importScripts('./service-worker-assets.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
-
-self.addEventListener("periodicsync", (event) => {
-    if (event.tag === "sync-car-inspections") {
-        event.waitUntil(() => console.log('background sync'));
-    }
-});
+self.addEventListener('periodicsync', event => event.waitUntil(onPeriodicSync(event)));
+self.addEventListener('sync', event => event.waitUntil(onBackgroundSync(event)));
+self.addEventListener('backgroundfetchsuccess', event => event.waitUntil(onBackgroundFetchSync(event)));
 
 self.addEventListener('push', function (e) {
     var options = {
@@ -32,8 +29,8 @@ self.addEventListener('notificationclick', function (e) {
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/];
+const offlineAssetsExclude = [/^service-worker\.js$/];
 
 async function onInstall(event) {
     console.info('Service worker: Install');
@@ -73,4 +70,32 @@ async function onFetch(event) {
     }
 
     return cachedResponse || fetch(event.request);
+}
+
+async function onPeriodicSync(event) {
+    if (event.tag === "sync-car-inspections") {
+        console.log('A periodic sync was triggered');
+        await pingSyncAPI();
+    }
+}
+
+async function onBackgroundSync(event) {
+    if (event.tag === "sync-car-inspections") {
+        console.log('A background sync was triggered');
+        await pingSyncAPI();
+    }
+}
+
+async function onBackgroundFetchSync(event) {
+    const files = await event.registration.matchAll();
+    console.log("Successfull Fetch in background");
+    console.log(files);
+    event.updateUI({ title: 'Successfull Fetch in background' });
+}
+
+async function pingSyncAPI() {
+    var deviceName = "test";
+    fetch("https://racecarinspectionapp.azurewebsites.net/api/sync/inspection-result/" + deviceName, {
+        method: "POST"
+    });
 }

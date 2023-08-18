@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.X509;
 using RaceCarInspection.Server.Data;
 using RaceCarInspection.Server.Services;
 
@@ -21,6 +22,7 @@ namespace RaceCarInspection.Server.Controllers
         public IActionResult Sync(string devicename)
         {
             // Note: This is just a demo app. Sync is hard and this flow doesn't account for many real-world concerns
+            carInspectionData.AddDeviceToSyncList(devicename);
             return Ok(syncService.GetSyncManifest(devicename));
         }
 
@@ -36,6 +38,20 @@ namespace RaceCarInspection.Server.Controllers
         {
             var inspection = carInspectionData.GetInspections().FirstOrDefault(i => i.CarNumber == carnumber);
             return Ok(inspection);
+        }
+
+        [HttpPost("inspection-result/{deviceName}")]
+        public IActionResult PostInspectionResults(string deviceName)
+        {
+            carInspectionData.AddDeviceToSyncList(deviceName);
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult GetDevicesSyncing()
+        {
+            var devices = carInspectionData.GetDevicesDoingSync();
+            return View("DevicesSyncing", devices);
         }
     }
 }

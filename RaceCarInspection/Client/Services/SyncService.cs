@@ -1,10 +1,12 @@
 ﻿using Blazored.LocalStorage;
+using Microsoft.JSInterop;
 using RaceCarInspection.Client.Models;
 using RaceCarInspection.Client.Pages;
 using RaceCarInspection.Shared.Models;
 using System;
 using System.IO;
 using System.Net.Http.Json;
+using System.Text;
 
 namespace RaceCarInspection.Client.Services
 {
@@ -68,6 +70,29 @@ namespace RaceCarInspection.Client.Services
             }
 
             await SendUpdate(updateCallback, "Sync Complete", 100);
+        }
+
+        public async Task SyncData(string deviceName, IJSInProcessRuntime jsRuntime)
+        {
+            // Just an example of using the experimental background fetch API. This is not a complete sync, just an example
+            var manifest = await http.GetFromJsonAsync<SyncManifest>($"api/sync/{deviceName}");
+            var sb = new StringBuilder("[");
+            var count = 1;
+            foreach (var sop in manifest.NewSOPs.Take(3).ToList())
+            {
+                if(manifest.NewSOPs.Count == count)
+                {
+                    sb.Append($"/api/sync/download-sop/{sop.Id}");
+                }
+                else
+                {
+                    sb.Append($"/api/sync/download-sop/{sop.Id},");
+                }
+                count++;
+            }
+
+            sb.Append(']');
+            await jsRuntime.InvokeVoidAsync("fetchBackground", sb.ToString());
         }
 
         private async Task SendUpdate(Func<SyncEventArgs, Task> updateCallback, string message, int percentComplete = 0)

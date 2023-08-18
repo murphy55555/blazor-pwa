@@ -1,9 +1,38 @@
-﻿using RaceCarInspection.Shared.Models;
+﻿using Microsoft.Extensions.Caching.Memory;
+using RaceCarInspection.Shared.Models;
 
 namespace RaceCarInspection.Server.Data
 {
     public class CarInspectionData : ICarInspectionData
     {
+        private readonly IMemoryCache _memoryCache;
+        private const string devicesSyncing = "devicesSyncing";
+
+        public CarInspectionData(IMemoryCache memoryCache)
+        {
+            this._memoryCache = memoryCache;
+        }
+
+        public void AddDeviceToSyncList(string device)
+        {
+            var devices = _memoryCache.Get<List<string>>(devicesSyncing);
+            if (devices == null)
+            {
+                devices = new List<string>();
+                _memoryCache.Set(devicesSyncing, devices, DateTime.Now.AddSeconds(30));
+            }
+
+            if (!devices.Any(d => d == device))
+            {
+                devices.Add($"Device {device} last sync activity {DateTime.Now}");
+            }
+        }
+
+        public List<string> GetDevicesDoingSync()
+        {
+            return _memoryCache.Get<List<string>>(devicesSyncing) ?? new List<string>();
+        }
+
         public List<Inspection> GetInspections()
         {
             return new List<Inspection>

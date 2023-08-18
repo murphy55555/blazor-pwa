@@ -25,7 +25,19 @@
                     <span class="oi oi-cloud-download" aria-hidden="true"></span>
                     <span role="status">Sync Now</span>
                 </button>
-                <InputCheckbox @bind-Value="enableBackgroundSync" @onchange="EnableBackgroundSyncChanged">Enable Background Sync</InputCheckbox>
+                <br />
+
+                <label for="enableBackgroundCheck">Enable Periodic Background Sync</label>
+                <InputCheckbox @bind-Value="enableBackgroundSync" id="enableBackgroundCheck" @oninput="EnablePeriodicBackgroundSyncChanged"></InputCheckbox>
+                <br />
+                <label for="enableBackgroundFetch">Leverage Background Fetch</label>
+                <InputCheckbox @bind-Value="enableBackgroundFetch" id="enableBackgroundFetch"></InputCheckbox>
+                <br />
+
+                <button type="button" class="btn btn-secondary mt-2 mb-3" @onclick="TriggerBackgroundSync">
+                    <span class="oi oi-bolt" aria-hidden="true"></span>
+                    <span role="status">Trigger a Background Sync Now</span>
+                </button>
             }
         </div>
     </div>
@@ -54,6 +66,7 @@
     private PushRegistration pushRegistration;
     private BatteryStatus batteryStatus = new BatteryStatus();
     private bool enableBackgroundSync = false;
+    private bool enableBackgroundFetch = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,10 +74,16 @@
         deviceName = pushRegistration?.DeviceName;
     }
 
-    private async Task EnableBackgroundSyncChanged()
+    private async Task EnablePeriodicBackgroundSyncChanged()
     {
         var jsInProcess = (IJSInProcessRuntime)JS;
-        await jsInProcess.InvokeVoidAsync("configureBackgroundSync", enableBackgroundSync);
+        await jsInProcess.InvokeVoidAsync("configurePeriodicBackgroundSync");
+    }
+
+    private async Task TriggerBackgroundSync()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JS;
+        await jsInProcess.InvokeVoidAsync("triggerBackgroundSync", deviceName);
     }
 
     private async Task StartSync()
@@ -82,7 +101,14 @@
 
         var jsInProcess = (IJSInProcessRuntime)JS;
         batteryStatus = await jsInProcess.InvokeAsync<BatteryStatus>("getBatteryInfo");
-        await syncService.SyncData(deviceName, OnSyncProgressUpdated);
+        if (enableBackgroundFetch)
+        {
+            await syncService.SyncData(deviceName, jsInProcess);
+        }
+        else
+        {
+            await syncService.SyncData(deviceName, OnSyncProgressUpdated);
+        }
     }
 
     private async Task OnSyncProgressUpdated(SyncEventArgs syncEvent)
@@ -98,5 +124,11 @@
         progressPercentComplete = syncEvent.ProgressCompletePercentage;
         StateHasChanged();
         await Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public static Task OnBackgroundSync()
+    {
+        return Task.CompletedTask;
     }
 }

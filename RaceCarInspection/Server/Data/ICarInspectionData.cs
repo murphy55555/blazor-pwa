@@ -6,5 +6,7 @@ namespace RaceCarInspection.Server.Data
     {
         List<StandardOperatingProcedure> GetStandardOperatingProcedures();
         List<Inspection> GetInspections();
+        List<string> GetDevicesDoingSync();
+        void AddDeviceToSyncList(string device);
     }
 }

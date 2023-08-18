@@ -12,15 +12,25 @@
     }
     return outputArray;
 }
-async function configureBackgroundSync(enabled) {
+
+async function configurePeriodicBackgroundSync() {
+
     const registration = await navigator.serviceWorker.ready;
     try {
         await registration.periodicSync.register("sync-car-inspections", {
-            minInterval: 5 * 1000,
+            // Chrome says HAHA to this minInterval. https://developer.chrome.com/articles/periodic-background-sync/#getting-user-engagement-right
+            minInterval: 5 * 1000
         });
+        console.log("Periodic background sync code registered");
     } catch {
-        console.log("Periodic Sync could not be registered!");
+        console.log("Periodic background sync could not be registered!");
     }
+}
+
+async function triggerBackgroundSync() {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.sync.register('sync-car-inspections');
+    console.log("background code triggered");
 }
 
 function registerForPush(componentInstance) {
@@ -141,4 +151,14 @@ async function takePicture(videoPlayerSrcId, canvasSrcId, componentInstance) {
 
 function stopRecordingVideo() {
     window.mediaRecorder.stop();
+}
+
+async function fetchBackground(filesToDownload) {
+    var registration = await navigator.serviceWorker.ready;
+    var files = filesToDownload.split(',');
+    console.log(files);
+    const bgFetch = await registration.backgroundFetch.fetch('Background Fetch', files, {
+        title: 'Updated Race Car SOPs'
+    });
+    console.log(bgFetch);
 }

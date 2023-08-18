@@ -1,0 +1,15 @@
+﻿@using RaceCarInspection.Shared.Models;
+@model List<string>
+
+@{
+    ViewData["Title"] = "Devices Syncing";
+}
+
+<h1>Devices Currently Syncing (sort of, cache dumps every 30 seconds)</h1>
+
+<ul>
+    @foreach (var device in Model)
+    {
+        <li>@device</li>
+    }
+</ul>
