@@ -55,7 +55,7 @@
     </div>
 </div>
 
-<EditForm Model="@carInspection.InspectionResult" >
+<EditForm Model="@carInspection.InspectionResult">
     <div class="row">
         <div class="col-sm-12 col-lg-8">
             <div class="accordion" id="accordionPanelsStayOpenExample">
@@ -171,7 +171,7 @@
 
                                 <label class="form-check-label mt-2" for="front-camera">Selfie Camera</label>
                                 <InputFile OnChange="@AddFilesNativeCamera" id="front-camera" type="file" accept="image/*" capture="user" />
-                                
+
 
                                 @foreach (var file in carInspection.InspectionResult.SupportingMediaFiles)
                                 {
