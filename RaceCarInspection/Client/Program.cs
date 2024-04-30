@@ -9,7 +9,9 @@ using RaceCarInspection.Client.Data;
 using RaceCarInspection.Client.Services;
 using RaceCarInspection.Shared.Models;
 
+// This is special, I just know it!!
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 

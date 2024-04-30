@@ -31,6 +31,7 @@ else
 
 app.UseHttpsRedirection();
 
+// !!The magic happens here!!
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
