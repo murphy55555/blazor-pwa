@@ -71,7 +71,13 @@ async function getGeoLocation() {
                 Latitude: position.coords.latitude,
                 Longitude: position.coords.longitude
             });
-        })
+        }, error => {
+            console.log(error);
+            resolve({
+                Latitude: 0.0,
+                Longitude: 0.0
+            });
+        }, { maximumAge: 60000, timeout: 2000, enableHighAccuracy: true })
     });
 
     return await getGeoPromise;
